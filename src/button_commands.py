@@ -1,5 +1,7 @@
 from tkinter import filedialog
 
+from CTkMessagebox import CTkMessagebox
+
 
 def pick_file(entry):
     path = filedialog.askopenfilename(
@@ -17,7 +19,30 @@ def identify(detector, path):
             detector.read_txt(path)
         else:
             detector.read_link(path)
-        print(f"Article is probably: {detector.identify()}")
-    else:
-        print("Error, provide path or url")
 
+        icon = "info"
+        result = detector.identify()
+
+        if result == "REAL":
+            icon = "check"
+        else:
+            icon = "cancel"
+
+        CTkMessagebox(
+            title="Result",
+            message=f"Article is probably: {result}",
+            icon=icon,
+            button_color="#2fa572",
+            button_hover_color="#106a43",
+            font=("Arial", 20),
+        )
+
+    else:
+        CTkMessagebox(
+            title="Error",
+            message="Error, provide path or url",
+            icon="cancel",
+            button_color="#2fa572",
+            button_hover_color="#106a43",
+            font=("Arial", 20),
+        )
