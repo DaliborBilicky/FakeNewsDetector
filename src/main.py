@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 
 import pandas as pd
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
@@ -53,14 +53,12 @@ def main():
     gbc = Detector(
         GradientBoostingClassifier(), vectorizer, text_vec, authenticity
     )
-    rfc = Detector(RandomForestClassifier(), vectorizer, text_vec, authenticity)
 
     detectors = {
         str(lsvc): lsvc,
         str(lg): lg,
         str(dtc): dtc,
         str(gbc): gbc,
-        str(rfc): rfc,
     }
 
     label.configure(text="Starting")
