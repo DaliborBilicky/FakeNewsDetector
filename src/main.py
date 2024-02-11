@@ -1,82 +1,80 @@
-import customtkinter as ctk
+import time
+import tkinter as tk
+from tkinter import ttk
+
+import pandas as pd
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
+from sklearn.tree import DecisionTreeClassifier
 
-import button_commands as bc
-
-# import config as cf
+import config as cf
+import ui
 from detector import Detector
-
-# from CTkMessagebox import CTkMessagebox
-
-
-TITLE = "Fake news detector"
-FONT = ("Arial", 30)
 
 
 def main():
-    ctk.set_appearance_mode("dark")
-    ctk.set_default_color_theme("green")
-    window = ctk.CTk()
-    window.title(TITLE)
-    window.resizable(False, False)
+    loading = tk.Tk()
+    loading.geometry("400x100")
+    loading.resizable(False, False)
 
-    detector = Detector(LinearSVC(dual="auto"))
-    detector.read_training_data()
-    detector.load_model()
-
-    entry = ctk.CTkEntry(window, width=400, font=FONT)
-    entry.grid(row=0, column=0, padx=10, pady=10)
-
-    pick_button = ctk.CTkButton(
-        window,
-        text="Brows files",
-        font=FONT,
-        command=lambda: bc.pick_file(entry),
+    label = tk.Label(loading, font=cf.FONT)
+    label.pack()
+    progressbar = ttk.Progressbar(
+        loading, orient="horizontal", length=200, mode="determinate"
     )
-    pick_button.grid(row=0, column=1, pady=10)
+    progressbar.pack()
 
-    identify_button = ctk.CTkButton(
-        window,
-        text="Identify",
-        font=FONT,
-        command=lambda: bc.identify(detector, entry.get()),
+    label.configure(text="Loading training data")
+    progressbar["value"] = 20
+    loading.update()
+    time.sleep(1)
+    data = pd.read_csv(cf.TRAIN_DATA)
+    data["authenticity"] = data["authenticity"].apply(
+        lambda a: 0 if a == "REAL" else 1
     )
-    identify_button.grid(row=1, column=0, pady=10, columnspan=2)
 
-    spacer = ctk.CTkLabel(window, text=" ", font=FONT)
-    spacer.grid(row=2, column=0, pady=5)
+    label.configure(text="Vectorizing data")
+    progressbar["value"] = 60
+    loading.update()
+    time.sleep(1)
+    vectorizer = TfidfVectorizer(stop_words="english", max_df=0.7)
+    text, authenticity = data["text"], data["authenticity"]
+    text_vec = vectorizer.fit_transform(text)
 
-    score_label = ctk.CTkLabel(
-        window, text=f"Score: {detector.get_score()}%", font=FONT
+    label.configure(text="Preparing classifiers")
+    progressbar["value"] = 80
+    loading.update()
+    time.sleep(1)
+    lsvc = Detector(LinearSVC(dual="auto"), vectorizer, text_vec, authenticity)
+    lg = Detector(LogisticRegression(), vectorizer, text_vec, authenticity)
+    dtc = Detector(DecisionTreeClassifier(), vectorizer, text_vec, authenticity)
+    gbc = Detector(
+        GradientBoostingClassifier(), vectorizer, text_vec, authenticity
     )
-    score_label.grid(row=3, column=1, padx=10, pady=10)
+    rfc = Detector(RandomForestClassifier(), vectorizer, text_vec, authenticity)
 
-    detectos = [detector, detector]
+    detectors = {
+        str(lsvc): lsvc,
+        str(lg): lg,
+        str(dtc): dtc,
+        str(gbc): gbc,
+        str(rfc): rfc,
+    }
 
-    def optionmenu_callback(choice):
-        print(f"optionmenu dropdown clicked: {choice}")
+    label.configure(text="Starting")
+    progressbar["value"] = 100
+    loading.update()
+    time.sleep(2)
 
-    optionmenu_var = ctk.StringVar(value=str(detectos[0]))
-    optionmenu = ctk.CTkOptionMenu(
-        window,
-        font=FONT,
-        dropdown_font=FONT,
-        width=350,
-        values=[str(detectos[0]), str(detectos[1])],
-        command=optionmenu_callback,
-        variable=optionmenu_var,
-    )
-    optionmenu.grid(row=3, column=0, padx=10, pady=10)
+    loading.destroy()
 
-    retrain_button = ctk.CTkButton(
-        window,
-        text="Retrain model",
-        font=FONT,
-        command=lambda: bc.identify(detector, entry.get()),
-    )
-    retrain_button.grid(row=4, column=0, pady=10, columnspan=2)
+    interface = ui.UserInterface(detectors)
+    interface.detector_init(str(lsvc))
+    interface.gui_init()
 
-    window.mainloop()
+    interface.loop()
 
 
 if __name__ == "__main__":
