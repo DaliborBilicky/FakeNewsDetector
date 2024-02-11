@@ -1,5 +1,7 @@
 # Fake News Detection
 
+![Screenshot](res/Screenshot.png)
+
 ## Table of contents
 
 - [Description](#description)
