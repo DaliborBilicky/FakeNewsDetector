@@ -7,17 +7,21 @@ import config as cf
 
 
 class UserInterface:
-    def __init__(self, detectors):
+    """Main ui for user to interact with app."""
+
+    def __init__(self, detectors, window):
+        """Some initialization."""
+
         self.start = True
         self.detectors = detectors
-
-        ctk.set_appearance_mode(cf.MODE)
-        ctk.set_default_color_theme(cf.THEME)
-        self.window = ctk.CTk()
-        self.window.title(cf.TITLE)
-        self.window.resizable(False, False)
+        self.window = window
 
     def detector_init(self, choice):
+        """
+        Set right classifier on start and when user picks
+        from drop down menu.
+        """
+
         self.detector = self.detectors[choice]
         self.detector.load_model()
 
@@ -27,6 +31,8 @@ class UserInterface:
             self._reload_label()
 
     def gui_init(self):
+        """Setting UI parts."""
+
         entry = ctk.CTkEntry(self.window, width=400, font=cf.FONT)
         entry.grid(row=0, column=0, padx=10, pady=10)
 
@@ -78,9 +84,16 @@ class UserInterface:
         retrain_button.grid(row=4, column=0, pady=10, columnspan=2)
 
     def _reload_label(self):
+        """Realoading label to show current model score."""
+
         self.score_label.configure(text=f"Score: {self.detector.get_score()}%")
 
     def _pick_file(self, entry):
+        """
+        Private method which is called when
+        button Brows files is clicked.
+        """
+
         path = filedialog.askopenfilename(
             initialdir=cf.INIT_DIR,
             title="Select text file",
@@ -90,6 +103,11 @@ class UserInterface:
         entry.insert(0, path)
 
     def _identify(self, path):
+        """
+        Private method which is called when
+        button identify is clicked.
+        """
+
         if path != "":
             if ".txt" in path:
                 self.detector.read_txt(path)
@@ -124,8 +142,9 @@ class UserInterface:
             )
 
     def _retrain(self):
+        """
+        Private method which is called when
+        button retrain is clicked.
+        """
         self.detector.train_model()
         self.detector.save_model()
-
-    def loop(self):
-        self.window.mainloop()

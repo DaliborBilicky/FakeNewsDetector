@@ -1,7 +1,4 @@
-import time
-import tkinter as tk
-from tkinter import ttk
-
+import customtkinter as ctk
 import pandas as pd
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -10,43 +7,39 @@ from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 
 import config as cf
-import ui
+import gui
 from detector import Detector
 
 
 def main():
-    loading = tk.Tk()
-    loading.geometry("400x100")
-    loading.resizable(False, False)
+    """Main function."""
 
-    label = tk.Label(loading, font=cf.FONT)
-    label.pack()
-    progressbar = ttk.Progressbar(
-        loading, orient="horizontal", length=200, mode="determinate"
-    )
-    progressbar.pack()
+    # Initialize main window
+    ctk.set_appearance_mode(cf.MODE)
+    ctk.set_default_color_theme(cf.THEME)
+    window = ctk.CTk()
+    window.title(cf.TITLE)
+    window.resizable(False, False)
 
-    label.configure(text="Loading training data")
-    progressbar["value"] = 20
-    loading.update()
-    time.sleep(1)
+    # Initialize splash window
+    splash = gui.SplashScreen()
+    splash.update("", 0)
+
+    # Reading data and setting authenticity to numbers
+    splash.update("Reading data", 20)
     data = pd.read_csv(cf.TRAIN_DATA)
     data["authenticity"] = data["authenticity"].apply(
         lambda a: 0 if a == "REAL" else 1
     )
 
-    label.configure(text="Vectorizing data")
-    progressbar["value"] = 60
-    loading.update()
-    time.sleep(1)
+    # Vectorizing data because classifier can not work with text
+    splash.update("Vectorizing data", 60)
     vectorizer = TfidfVectorizer(stop_words="english", max_df=0.7)
     text, authenticity = data["text"], data["authenticity"]
     text_vec = vectorizer.fit_transform(text)
 
-    label.configure(text="Preparing classifiers")
-    progressbar["value"] = 80
-    loading.update()
-    time.sleep(1)
+    # Setting classifier into Detectors
+    splash.update("Preparing classifiers", 80)
     lsvc = Detector(LinearSVC(dual="auto"), vectorizer, text_vec, authenticity)
     lg = Detector(LogisticRegression(), vectorizer, text_vec, authenticity)
     dtc = Detector(DecisionTreeClassifier(), vectorizer, text_vec, authenticity)
@@ -54,25 +47,17 @@ def main():
         GradientBoostingClassifier(), vectorizer, text_vec, authenticity
     )
 
-    detectors = {
-        str(lsvc): lsvc,
-        str(lg): lg,
-        str(dtc): dtc,
-        str(gbc): gbc,
-    }
+    detectors = {str(lsvc): lsvc, str(lg): lg, str(dtc): dtc, str(gbc): gbc}
 
-    label.configure(text="Starting")
-    progressbar["value"] = 100
-    loading.update()
-    time.sleep(2)
+    splash.update("Strating", 100)
+    splash.kill()
 
-    loading.destroy()
-
-    interface = ui.UserInterface(detectors)
+    # Main gui
+    interface = gui.UserInterface(detectors, window)
     interface.detector_init(str(lsvc))
     interface.gui_init()
 
-    interface.loop()
+    window.mainloop()
 
 
 if __name__ == "__main__":

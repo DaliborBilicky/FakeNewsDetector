@@ -8,7 +8,14 @@ import config as cf
 
 
 class Detector:
+    """
+    Class which wraps classifier and prepares
+    it to predict on training data.
+    """
+
     def __init__(self, classifier, vectorizer, vec_text, authenticity):
+        """Some initialization."""
+
         self.vectorizer = vectorizer
         self.classifier = classifier
         self.vec_text = vec_text
@@ -16,13 +23,22 @@ class Detector:
         self.article = ""
 
     def get_score(self) -> float:
+        """Returns trained model score."""
+
         score = self.classifier.score(self.vec_text, self.authenticity)
         return round(score * 100, 3)
 
     def __str__(self) -> str:
+        """
+        Method which specifies how should be
+        this class represented as string
+        """
+
         return type(self.classifier).__name__
 
     def train_model(self):
+        """Trains model and say it after in message box."""
+
         self.classifier.fit(self.vec_text, self.authenticity)
 
         CTkMessagebox(
@@ -35,6 +51,11 @@ class Detector:
         )
 
     def read_link(self, url):
+        """
+        Method reads link from internet and sets article
+        which is ready to be predicted.
+        """
+
         response = requests.get(url)
 
         if response.status_code == 200:
@@ -54,6 +75,11 @@ class Detector:
             )
 
     def read_txt(self, path):
+        """
+        Method reads .txt file and sets article
+        which is ready to be predicted.
+        """
+
         try:
             with open(path, "r", encoding="utf-8") as my_file:
                 self.article = my_file.read()
@@ -68,6 +94,8 @@ class Detector:
             )
 
     def identify(self) -> str:
+        """Predicting article."""
+
         vec_article = self.vectorizer.transform([self.article])
 
         num = self.classifier.predict(vec_article)[0]
@@ -78,6 +106,8 @@ class Detector:
             return "REAL"
 
     def save_model(self):
+        """Saves model for better convenience."""
+
         with open(f"{cf.MODEL_PATH}{self}.pickle", "wb") as f:
             pickle.dump(self.classifier, f)
         CTkMessagebox(
@@ -90,6 +120,11 @@ class Detector:
         )
 
     def load_model(self):
+        """
+        Loads the model so that it does not
+        have to be trained again.
+        """
+
         try:
             with open(f"{cf.MODEL_PATH}{self}.pickle", "rb") as f:
                 self.classifier = pickle.load(f)
