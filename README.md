@@ -1,4 +1,4 @@
-# Fake News Detection
+# Fake News Detector
 
 ![Screenshot](res/Screenshot.png)
 
