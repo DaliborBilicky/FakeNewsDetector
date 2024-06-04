@@ -47,7 +47,7 @@ python src/main.py
 #### Using UI
 
 When you start app, wait until app prepares all the necessary things. Than you
-can start using the app.  
+can start using the app.
 
 - **Entry:** put there url or path to article.
 - **Brows files:** is for easier finding of your files.
